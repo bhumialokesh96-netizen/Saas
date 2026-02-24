@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - WhatsApp SaaS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --success: #4CAF50;
+            --error: #f44336;
+            --warning: #ff9800;
+            --info: #2196F3;
+            --bg-light: #f5f5f5;
+            --bg-white: #ffffff;
+            --text-dark: #333;
+            --text-light: #666;
+            --border: #e0e0e0;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode {
+            --bg-light: #1a1a1a;
+            --bg-white: #2d2d2d;
+            --text-dark: #f5f5f5;
+            --text-light: #bbb;
+            --border: #404040;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle {
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            width: 50px;
+            height: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .theme-toggle.dark {
+            background: #333;
+        }
+
+        .theme-toggle::after {
+            content: '☀️';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .theme-toggle.dark::after {
+            content: '🌙';
+            left: 22px;
+        }
+
+        .btn-logout {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--bg-light);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .status-badge.connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+        }
+
+        .status-badge.disconnected {
+            background: #ffebee;
+            color: #c62828;
+            box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.connected .status-dot {
+            background: #4CAF50;
+        }
+
+        .status-badge.disconnected .status-dot {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-btn {
+            padding: 14px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-dark);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="tel"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-white);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 10px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch:hover {
+            background: var(--border);
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 30px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .number-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 12px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .number-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .number-value {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 15px;
+        }
+
+        .btn-remove {
+            background: var(--error);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-remove:hover {
+            opacity: 0.9;
+            box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
+        }
+
+        .add-number-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .add-number-group input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            background: var(--bg-white);
+            border-left: 4px solid var(--success);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.info {
+            border-left-color: var(--info);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            background: var(--bg-light);
+            padding: 18px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .info-item:hover {
+            background: var(--border);
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            word-break: break-all;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .connection-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .indicator-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .indicator-dot.connected {
+            background: var(--success);
+        }
+
+        .indicator-dot.disconnected {
+            background: var(--error);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .card-title {
+                font-size: 16px;
+            }
+
+            .add-number-group {
+                flex-direction: column;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                padding: 12px 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="logo">📱</div>
+            <div>
+                <div class="title">WhatsApp SaaS Admin</div>
+            </div>
+        </div>
+        <div id="statusBadge" class="status-badge disconnected">
+            <span class="status-dot"></span>
+            <span id="statusText">Disconnected</span>
+        </div>
+        <div class="header-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('status', event)">📊 Status</button>
+            <button class="tab-btn" onclick="switchTab('auto-sender', event)">📤 Auto Sender</button>
+            <button class="tab-btn" onclick="switchTab('auto-reply', event)">💬 Auto Reply</button>
+            <button class="tab-btn" onclick="switchTab('quick-send', event)">✉️ Quick Send</button>
+        </div>
+
+        <!-- Status Tab -->
+        <div id="status" class="tab-content active">
+            <div class="card">
+                <div class="card-title">🔌 Connection Status</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Current Status</div>
+                        <div class="info-value">
+                            <div id="statusValue" style="display: flex; align-items: center; gap: 10px;">
+                                <span class="loading-spinner"></span>
+                                Loading...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Device JID</div>
+                        <div class="info-value" id="jidValue" style="font-family: monospace; font-size: 12px;">Loading...</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Linked Since</div>
+                        <div class="info-value" id="linkedSinceValue">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Last Active</div>
+                        <div class="info-value" id="lastActiveValue">--</div>
+                    </div>
+                </div>
+                <div class="action-bar">
+                    <button class="btn btn-small" onclick="refreshStatus()">🔄 Refresh Status</button>
+                    <button class="btn btn-secondary btn-small" onclick="testConnection()">🧪 Test Connection</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📈 Quick Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="messagesSent">0</div>
+                        <div class="stat-label">Messages Sent</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="autoReplies">0</div>
+                        <div class="stat-label">Auto Replies</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto Sender Tab -->
+        <div id="auto-sender" class="tab-content">
+            <div class="card">
+                <div class="card-title">📤 Auto Sender Configuration</div>
+                
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <span>Enable Auto Sender</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autosenderEnabled" onchange="updateAutosenderToggle()">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>Welcome Message</label>
+                    <textarea id="welcomeMessage" placeholder="Enter welcome message..." maxlength="1000"></textarea>
+                    <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                        <span id="messageCount">0</span>/1000 characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Target Phone Numbers</label>
+                    <div class="add-number-group">
+                        <input type="tel" id="phoneNumber" placeholder="Enter phone number (10 digits)" maxlength="10">
+                        <button class="btn" onclick="addNumber()">➕ Add</button>
+                    </div>
+                    <div class="number-list" id="numbersList"></div>
+                    <div style="font-size: 12px; color: var(--text-light);">
+                        📱 <span id="numbersCount">0</span> phone numbers configured
+                    </div>
+                </div>
+
+                <button class="btn" onclick="saveAutosenderConfig()" id="saveBtnSender">💾 Save Configuration</button>
+            </div>
+
+            <div class="card">
+                <div style="color: var(--text-light); font-size: 13px; line-height: 1.8;">
+                    <strong>ℹ️ How Auto Sender Works:</strong><br>
+                    ✓ Messages are sent 5 seconds after device linking<br>
+                    ✓ 2-second delay between each message<br>
+                    ✓ Only sent to private chats (not groups)<br>
+                    ✓ Requires active WhatsApp connection<br>
+                    ✓ Messages are logged in message history
+                </div>
+            </div>
+        </div>
+
+        <!-- Auto Reply Tab -->
+        <div id="auto-reply" class="tab-content">
+            <div class="card">
+                <div class="card-title">💬 Auto Reply Configuration</div>
+                
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <span>Enable Auto Reply</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autoreplyEnabled" onchange="updateAutoreplyToggle()">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>Reply Message</label>
+                    <textarea id="replyMessage" placeholder="Enter auto-reply message..." maxlength="1000"></textarea>
+                    <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                        <span id="replyCount">0</span>/1000 characters
+                    </div>
+                </div>
+
+                <button class="btn" onclick="saveAutoreplyConfig()" id="saveBtnReply">💾 Save Configuration</button>
+            </div>
+
+            <div class="card">
+                <div style="color: var(--text-light); font-size: 13px; line-height: 1.8;">
+                    <strong>ℹ️ How Auto Reply Works:</strong><br>
+                    ✓ Automatically replies to incoming private messages<br>
+                    ✓ Only replies to text messages<br>
+                    ✓ Ignores group messages and self-messages<br>
+                    ✓ Requires active WhatsApp connection<br>
+                    ✓ One reply per conversation per 5 minutes (optional throttling)
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Send Tab -->
+        <div id="quick-send" class="tab-content">
+            <div class="card">
+                <div class="card-title">✉️ Send Message</div>
+                
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="sendPhoneNumber" placeholder="Enter 10-digit phone number" maxlength="10">
+                    <div style="color: var(--text-light); font-size: 12px; margin-top: 5px;">Format: 10-digit number (e.g., 9876543210)</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="sendMessage" placeholder="Enter message to send..." maxlength="4096"></textarea>
+                    <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                        <span id="quickMsgCount">0</span>/4096 characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="toggle-switch">
+                        <span>Save to contacts</span>
+                        <label class="switch">
+                            <input type="checkbox" id="saveContact">
+                            <span class="slider"></span>
+                        </label>
+                    </label>
+                </div>
+
+                <button class="btn" onclick="sendQuickMessage()" id="sendBtn">📤 Send Message</button>
+            </div>
+
+            <div class="card">
+                <div style="color: var(--text-light); font-size: 13px; line-height: 1.8;">
+                    <strong>ℹ️ Notes:</strong><br>
+                    • Messages are sent immediately<br>
+                    • Requires active WhatsApp connection<br>
+                    • Supports text messages only<br>
+                    • Messages are logged and can be tracked
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        let ws = null;
+        let wsReconnectAttempts = 0;
+        const MAX_RECONNECT_ATTEMPTS = 5;
+        let stats = {
+            messagesSent: 0,
+            autoReplies: 0
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            refreshStatus();
+            setupWebSocket();
+            setInterval(refreshStatus, 5000);
+            loadTheme();
+
+            // Character counter updates
+            document.getElementById('welcomeMessage').addEventListener('input', (e) => {
+                document.getElementById('messageCount').textContent = e.target.value.length;
+            });
+            document.getElementById('replyMessage').addEventListener('input', (e) => {
+                document.getElementById('replyCount').textContent = e.target.value.length;
+            });
+            document.getElementById('sendMessage').addEventListener('input', (e) => {
+                document.getElementById('quickMsgCount').textContent = e.target.value.length;
+            });
+        });
+
+        // WebSocket Setup
+        function setupWebSocket() {
+            try {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+                ws.onopen = () => {
+                    log('✅ WebSocket connected');
+                    wsReconnectAttempts = 0;
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        handleWebSocketMessage(msg);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.onclose = () => {
+                    log('⚠️ WebSocket disconnected');
+                    attemptReconnect();
+                };
+            } catch (error) {
+                console.error('WebSocket setup error:', error);
+            }
+        }
+
+        function attemptReconnect() {
+            if (wsReconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                wsReconnectAttempts++;
+                const delay = Math.pow(2, wsReconnectAttempts) * 1000;
+                log(`🔄 Reconnecting in ${delay / 1000}s... (Attempt ${wsReconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                setTimeout(setupWebSocket, delay);
+            }
+        }
+
+        function handleWebSocketMessage(msg) {
+            switch (msg.type) {
+                case 'connection_changed':
+                    refreshStatus();
+                    break;
+                case 'config_updated':
+                    loadConfig();
+                    break;
+                case 'message_sent':
+                    stats.messagesSent++;
+                    updateStats();
+                    break;
+                case 'auto_reply':
+                    stats.autoReplies++;
+                    updateStats();
+                    break;
+                case 'pair_success':
+                    log('✅ Device paired successfully!');
+                    break;
+            }
+        }
+
+        // Tab Management
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Status Management
+        async function refreshStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/info`);
+                const data = await response.json();
+
+                const statusBadge = document.getElementById('statusBadge');
+                const statusText = document.getElementById('statusText');
+                const statusValue = document.getElementById('statusValue');
+
+                if (data.connected) {
+                    statusBadge.classList.remove('disconnected');
+                    statusBadge.classList.add('connected');
+                    statusText.textContent = 'Connected';
+                    statusValue.innerHTML = '🟢 Connected';
+                } else {
+                    statusBadge.classList.add('disconnected');
+                    statusBadge.classList.remove('connected');
+                    statusText.textContent = 'Disconnected';
+                    statusValue.innerHTML = '🔴 Disconnected';
+                }
+
+                document.getElementById('jidValue').textContent = data.jid || 'N/A';
+                
+                if (data.linked_at) {
+                    const date = new Date(data.linked_at);
+                    document.getElementById('linkedSinceValue').textContent = date.toLocaleString();
+                }
+
+                document.getElementById('lastActiveValue').textContent = new Date().toLocaleTimeString();
+            } catch (error) {
+                console.error('Status refresh error:', error);
+                document.getElementById('statusValue').innerHTML = '⚠️ Error fetching status';
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    showToast('✅ Server connection: OK', 'success');
+                    refreshStatus();
+                } else {
+                    showToast('❌ Server connection: Failed', 'error');
+                }
+            } catch (error) {
+                showToast('❌ Connection test failed', 'error');
+            }
+        }
+
+        // Config Management
+        async function loadConfig() {
+            try {
+                const response = await fetch(`${API_BASE}/api/config`);
+                const config = await response.json();
+
+                document.getElementById('autosenderEnabled').checked = config.enabled || false;
+                document.getElementById('welcomeMessage').value = config.message || '';
+                document.getElementById('messageCount').textContent = config.message?.length || 0;
+
+                document.getElementById('autoreplyEnabled').checked = config.reply_enable || false;
+                document.getElementById('replyMessage').value = config.reply_text || '';
+                document.getElementById('replyCount').textContent = config.reply_text?.length || 0;
+
+                const numbersList = document.getElementById('numbersList');
+                numbersList.innerHTML = '';
+                if (config.numbers && Array.isArray(config.numbers)) {
+                    config.numbers.forEach((num, idx) => {
+                        addNumberToList(num, idx);
+                    });
+                }
+                updateNumbersCount();
+            } catch (error) {
+                console.error('Config load error:', error);
+                showToast('Failed to load configuration', 'error');
+            }
+        }
+
+        function addNumber() {
+            const input = document.getElementById('phoneNumber');
+            const phone = input.value.trim();
+
+            if (!phone) {
+                showToast('Please enter a phone number', 'error');
+                return;
+            }
+
+            if (!/^\d{10}$/.test(phone)) {
+                showToast('Please enter a valid 10-digit phone number', 'error');
+                return;
+            }
+
+            const existingNumbers = Array.from(document.querySelectorAll('.number-value')).map(el => el.textContent);
+            if (existingNumbers.includes(phone)) {
+                showToast('This number already exists', 'warning');
+                return;
+            }
+
+            addNumberToList(phone);
+            input.value = '';
+            updateNumbersCount();
+        }
+
+        function addNumberToList(phone, idx) {
+            const list = document.getElementById('numbersList');
+            const item = document.createElement('div');
+            item.className = 'number-item';
+            item.innerHTML = `
+                <span class="number-value">${phone}</span>
+                <button class="btn-remove" onclick="removeNumber(this)">✕ Remove</button>
+            `;
+            list.appendChild(item);
+        }
+
+        function removeNumber(btn) {
+            btn.closest('.number-item').remove();
+            updateNumbersCount();
+        }
+
+        function updateNumbersCount() {
+            document.getElementById('numbersCount').textContent = 
+                document.querySelectorAll('.number-value').length;
+        }
+
+        async function saveAutosenderConfig() {
+            const btn = document.getElementById('saveBtnSender');
+            btn.disabled = true;
+
+            const config = {
+                enabled: document.getElementById('autosenderEnabled').checked,
+                message: document.getElementById('welcomeMessage').value || 'Welcome!',
+                numbers: Array.from(document.querySelectorAll('.number-value')).map(el => el.textContent),
+                reply_enable: document.getElementById('autoreplyEnabled').checked,
+                reply_text: document.getElementById('replyMessage').value || 'Thanks!'
+            };
+
+            if (config.enabled && config.numbers.length === 0) {
+                showToast('⚠️ Enable Auto Sender but no numbers configured', 'warning');
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    showToast('✅ Auto Sender configuration saved', 'success');
+                } else {
+                    showToast('❌ Failed to save configuration', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('❌ Error saving configuration', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function saveAutoreplyConfig() {
+            const btn = document.getElementById('saveBtnReply');
+            btn.disabled = true;
+
+            const config = {
+                enabled: document.getElementById('autosenderEnabled').checked,
+                message: document.getElementById('welcomeMessage').value || 'Welcome!',
+                numbers: Array.from(document.querySelectorAll('.number-value')).map(el => el.textContent),
+                reply_enable: document.getElementById('autoreplyEnabled').checked,
+                reply_text: document.getElementById('replyMessage').value || 'Thanks!'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+
+                if (response.ok) {
+                    showToast('✅ Auto Reply configuration saved', 'success');
+                } else {
+                    showToast('❌ Failed to save configuration', 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('❌ Error saving configuration', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function updateAutosenderToggle() {
+            saveAutosenderConfig();
+        }
+
+        function updateAutoreplyToggle() {
+            saveAutoreplyConfig();
+        }
+
+        async function sendQuickMessage() {
+            const btn = document.getElementById('sendBtn');
+            const phone = document.getElementById('sendPhoneNumber').value.trim();
+            const message = document.getElementById('sendMessage').value.trim();
+
+            if (!phone || !message) {
+                showToast('Please fill all fields', 'error');
+                return;
+            }
+
+            if (!/^\d{10}$/.test(phone)) {
+                showToast('Please enter a valid 10-digit phone number', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+
+            try {
+                const response = await fetch(`${API_BASE}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone_number: phone, message: message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showToast('✅ Message sent successfully', 'success');
+                    document.getElementById('sendPhoneNumber').value = '';
+                    document.getElementById('sendMessage').value = '';
+                    document.getElementById('quickMsgCount').textContent = '0';
+                    stats.messagesSent++;
+                    updateStats();
+                } else {
+                    showToast('❌ ' + (data.message || 'Failed to send message'), 'error');
+                }
+            } catch (error) {
+                console.error('Send error:', error);
+                showToast('❌ Error sending message', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 Send Message';
+            }
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout? This will disconnect your device.')) {
+                try {
+                    await fetch(`${API_BASE}/logout`, { method: 'POST' });
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showToast('❌ Logout failed', 'error');
+                }
+            }
+        }
+
+        // Stats
+        function updateStats() {
+            document.getElementById('messagesSent').textContent = stats.messagesSent;
+            document.getElementById('autoReplies').textContent = stats.autoReplies;
+        }
+
+        // Theme
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+        }
+
+        // Notifications
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function log(message) {
+            console.log(`[${new Date().toLocaleTimeString()}] ${message}`);
+        }
+    </script>
+</body>
+</html>

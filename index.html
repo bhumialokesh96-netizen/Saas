@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Device Pairing - SaaS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 40px;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="tel"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        input[type="tel"]:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+            background: #f9fff9;
+        }
+
+        .hint {
+            color: #999;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .pairing-code-section {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .pairing-code-section.active {
+            display: block;
+        }
+
+        .code-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .code-display {
+            background: linear-gradient(135deg, #f5f5f5 0%, #f0f0f0 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px dashed #25D366;
+        }
+
+        .code-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #25D366;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.active {
+            display: block;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #f44336;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #1976d2;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: bounce 0.6s ease-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .redirect-message {
+            color: #666;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+
+        .error-message {
+            margin-top: 15px;
+            color: #c62828;
+            font-size: 13px;
+        }
+
+        .steps {
+            text-align: left;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #666;
+            margin: 15px 0;
+        }
+
+        .steps strong {
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .code-value {
+                font-size: 36px;
+                letter-spacing: 4px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">📱</div>
+            <h1>Link Your Device</h1>
+            <p class="subtitle">Connect your WhatsApp account securely to our platform</p>
+
+            <div id="pairingForm">
+                <div class="input-group">
+                    <label for="phone">Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        placeholder="Enter 10-digit phone number"
+                        autocomplete="off"
+                        inputmode="numeric"
+                    >
+                    <div class="hint">Format: 10-digit number (e.g., 9876543210)</div>
+                </div>
+
+                <button class="btn" onclick="getPairingCode()" id="getPairingBtn">Get Pairing Code</button>
+
+                <div id="errorMsg" class="status error"></div>
+            </div>
+
+            <div id="pairingCodeSection" class="pairing-code-section">
+                <div class="code-label">📱 Scan this code in WhatsApp</div>
+                <div class="code-display">
+                    <div class="code-value" id="codeDisplay">------</div>
+                </div>
+                
+                <div class="steps">
+                    <strong>Steps to Link:</strong><br>
+                    1️⃣ Open WhatsApp on your phone<br>
+                    2️⃣ Go to Settings → Linked Devices<br>
+                    3️⃣ Tap "Link a device"<br>
+                    4️⃣ Scan this code with your phone camera
+                </div>
+
+                <div id="linkingStatus" class="status loading active">
+                    <span class="spinner"></span>Waiting for device to link...
+                </div>
+            </div>
+
+            <div id="successSection" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2 style="color: #25D366; margin-bottom: 10px;">Device Linked Successfully!</h2>
+                <p class="redirect-message">Redirecting to dashboard in <span id="countdown">5</span> seconds...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pollingInterval = null;
+        let countdownInterval = null;
+
+        async function getPairingCode() {
+            const phoneInput = document.getElementById('phone');
+            const errorMsg = document.getElementById('errorMsg');
+            const phone = phoneInput.value.trim();
+            const btn = document.getElementById('getPairingBtn');
+
+            errorMsg.textContent = '';
+            errorMsg.classList.remove('active');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+
+            if (!phone) {
+                showError('Please enter a phone number');
+                btn.disabled = false;
+                btn.textContent = 'Get Pairing Code';
+                return;
+            }
+
+            if (!/^\d{10}$/.test(phone)) {
+                showError('Please enter a valid 10-digit phone number');
+                btn.disabled = false;
+                btn.textContent = 'Get Pairing Code';
+                return;
+            }
+
+            try {
+                const response = await fetch('/pair', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to get pairing code');
+                }
+
+                document.getElementById('pairingForm').style.display = 'none';
+                document.getElementById('pairingCodeSection').classList.add('active');
+                document.getElementById('codeDisplay').textContent = data.pairing_code;
+
+                startPolling();
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+                btn.disabled = false;
+                btn.textContent = 'Get Pairing Code';
+            }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = '❌ ' + message;
+            errorMsg.classList.add('active');
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(checkLinked, 2000);
+        }
+
+        async function checkLinked() {
+            try {
+                const response = await fetch('/is-linked');
+                const data = await response.json();
+
+                if (data.linked) {
+                    clearInterval(pollingInterval);
+                    showSuccess();
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('pairingCodeSection').classList.remove('active');
+            document.getElementById('linkingStatus').classList.remove('active');
+            document.getElementById('successSection').style.display = 'block';
+
+            let seconds = 5;
+            countdownInterval = setInterval(() => {
+                seconds--;
+                document.getElementById('countdown').textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/admin';
+                }
+            }, 1000);
+        }
+
+        document.getElementById('phone')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') getPairingCode();
+        });
+
+        document.getElementById('phone')?.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html>
